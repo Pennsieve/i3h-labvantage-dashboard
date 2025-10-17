@@ -39,7 +39,7 @@ The LabVantage Dashboard provides an interactive web interface for exploring lab
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd labvantage_dashboard
+cd i3h-labvantage-dashboard
 ```
 
 2. Install dependencies:
@@ -178,13 +178,11 @@ The `vite.config.js` file includes:
 ## Project Structure
 
 ```
-labvantage_dashboard/
+i3h-labvantage-dashboard/
 ├── data/
-│   ├── input/                 # Place CSV files here
-│   └── output/                # Generated Parquet files
+│   └── input/                 # Place CSV files here (contents ignored by git)
 ├── public/
-│   ├── index.html
-│   └── lv_export.parquet        # Parquet data file (web accessible)
+│   └── lv_export.parquet      # Parquet data file (web accessible)
 ├── src/
 │   ├── components/
 │   │   ├── OverviewDashboard.vue
