@@ -1,5 +1,6 @@
 # Labvantage data
 data/input/*
+data/
 public/*.parquet
 
 # Logs
