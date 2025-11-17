@@ -34,15 +34,40 @@ The LabVantage Dashboard provides an interactive web interface for exploring lab
 - Node.js (version 16 or higher)
 - npm or yarn package manager
 
+### Install Node.js and npm
+
+1. **Install nvm (Node Version Manager)**
+
+   - macOS/Linux: Follow instructions at https://github.com/nvm-sh/nvm
+   - Windows: Use nvm-windows from https://github.com/coreybutler/nvm-windows
+
+2. **Install Node.js** (this also installs npm automatically)
+
+```bash
+   nvm install 18
+   nvm use 18
+```
+
+3. **Verify installation**
+
+```bash
+   node --version
+   npm --version
+```
+
+You should see version numbers for both commands.
+
 ## Installation
 
 1. Clone the repository:
+
 ```bash
-git clone <repository-url>
+git clone https://github.com/Pennsieve/i3h-labvantage-dashboard.git
 cd i3h-labvantage-dashboard
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
@@ -54,26 +79,98 @@ npm install
 The dashboard expects data in Parquet format for optimal performance. If you have a CSV file, you can convert it using the included Python script:
 
 1. **Install Python dependencies**:
-   ```bash
-   pip install pandas pyarrow
-   ```
 
-2. **Place your CSV file** in the `data/input/` directory. 
+   First, verify pip is installed:
 
-3. **Update the script** (if needed):
-   
-   Edit `convert_csv_to_parquet.py` and update the file paths:
-   ```python
-   csv_file = "data/input/your_file.csv"        # Update with your CSV filename
-   parquet_file = "public/lv_export.parquet"  # Output location for web access
-   ```
+```bash
+   pip --version
+```
+
+If pip is not installed, see the [pip installation guide](https://pip.pypa.io/en/stable/installation/).
+
+Then install the required packages:
+
+```bash
+   pip install pandas
+   pip install pyarrow
+```
+
+**Note**: If `pip` command is not recognized, try using `python -m pip install` instead:
+
+```bash
+   python -m pip install pandas
+   python -m pip install pyarrow
+```
+
+2. **Place your CSV file(s)** in the `data/` directory.
+
+3. **Update the config** (if needed):
+
+   Edit `data/config/model.json` to configure your data processing:
+
+```json
+{
+  "file_names": ["your_file.csv", "optional_second_file.csv"],
+  "column_mapping": {
+    "old_column_name": "new_column_name"
+  },
+  "join": {
+    "type": "left",
+    "column": "STUDY"
+  },
+  "columns": {
+    "VISITDATE": { "type": "datetime" },
+    "IRB": { "type": "array_of_strings", "delimiter": " and " }
+  },
+  "default_type": "string"
+}
+```
+
+- **file_names**: List your CSV files (they should be in the `data/` folder)
+
+- **column_mapping** (optional): Rename columns to match dashboard requirements
+
+```json
+     "column_mapping": {
+       "assay_study": "STUDY",
+       "patient_id": "PARTICIPANTID",
+       "visit_dt": "VISITDATE"
+     }
+```
+
+     The dashboard expects these column names:
+     - `STUDY`: Study identifier
+     - `PARTICIPANTID`: Participant identifier
+     - `VISITDATE`: Visit date
+     - `SAMPLETYPE`: Type of sample
+     - `SAMPLESTATUS`: Status of the sample
+
+     If your CSV has different column names, use `column_mapping` to rename them.
+
+- **join**: If you have multiple CSV files, specify how to join them
+
+  - `type`: "left" keeps all rows from first file, "inner" only keeps matching rows
+  - `column`: Which column to join on (e.g., "STUDY", "SAMPLEID")
+
+- **columns**: Specify data types for specific columns
+
+  - `datetime`: For date columns
+  - `array_of_strings`: For columns with multiple values (like "IRB1 and IRB2")
+  - `category`: For columns with repeated values (saves memory)
+  - `int32`, `float32`: For numeric data
+
+- **default_type**: All columns not specified above will be treated as this type (usually "string")
+
+The converted parquet file will be saved to `public/lv_export.parquet` for web access.
 
 4. **Run the conversion script**:
+
    ```bash
    python convert_csv_to_parquet.py
    ```
 
    The script will:
+
    - Read your CSV file
    - Convert date columns (like VISITDATE) to proper datetime format
    - Save as compressed Parquet format in the `public/` directory
@@ -85,8 +182,9 @@ The dashboard expects data in Parquet format for optimal performance. If you hav
 ### Expected Data Schema
 
 The dashboard expects a table with these columns:
+
 - `STUDY`: Study identifier
-- `PARTICIPANTID`: Participant identifier  
+- `PARTICIPANTID`: Participant identifier
 - `VISITDATE`: Visit date (YYYY-MM-DD format)
 - `SAMPLETYPE`: Type of sample (e.g., 'CYTOF', 'PBMC', etc.)
 - `SAMPLESTATUS`: Status of the sample
@@ -97,6 +195,7 @@ The dashboard expects a table with these columns:
 ### Development Server
 
 Start the development server:
+
 ```bash
 npm run dev
 ```
@@ -106,6 +205,7 @@ The application will be available at `http://localhost:5173/`
 ### Build for Production
 
 Create a production build:
+
 ```bash
 npm run build
 ```
@@ -113,6 +213,7 @@ npm run build
 ### Preview Production Build
 
 Preview the production build locally:
+
 ```bash
 npm run preview
 ```
@@ -149,11 +250,11 @@ The Custom Query tab allows you to write SQL queries directly against your data:
 
 ```sql
 -- Example: Find samples by study and date range
-SELECT STUDY, COUNT(*) as sample_count 
-FROM samples 
-WHERE VISITDATE >= '2023-01-01' 
+SELECT STUDY, COUNT(*) as sample_count
+FROM samples
+WHERE VISITDATE >= '2023-01-01'
   AND VISITDATE <= '2023-12-31'
-GROUP BY STUDY 
+GROUP BY STUDY
 ORDER BY sample_count DESC;
 ```
 
@@ -179,8 +280,8 @@ The `vite.config.js` file includes:
 
 ```
 i3h-labvantage-dashboard/
-├── data/
-│   └── input/                 # Place CSV files here (contents ignored by git)
+├── data/               # Place CSV files here (contents ignored by git)
+├  └── config/model.json
 ├── public/
 │   └── lv_export.parquet      # Parquet data file (web accessible)
 ├── src/
@@ -205,18 +306,52 @@ i3h-labvantage-dashboard/
 ### Common Issues
 
 1. **"Failed to load parquet file"**
-   - Ensure your parquet file is placed in `public/lv_export.parquet`
+
+   - After running your python script, ensure your parquet file was placed in `public/lv_export.parquet`
    - Check that the file was converted correctly using the Python conversion script
    - Update your application code to load from the new data folder structure
 
 2. **Charts not displaying**
+
    - Verify your data has valid `VISITDATE` columns
    - Check browser console for JavaScript errors
 
 3. **Performance issues**
+
    - Large datasets (>1M rows) may be slow in browser
    - Consider filtering data during the CSV to Parquet conversion
 
 4. **CORS errors in development**
    - The Vite config should handle this automatically
    - Try clearing browser cache and restarting dev server
+
+### Installation Issues
+
+5. **Python not installed or not recognized**
+
+   - Windows: "python is not recognized as an internal or external command"
+   - Mac/Linux: "command not found: python"
+   - **Solution**: See [Python installation guide](https://realpython.com/installing-python/) and [PATH troubleshooting](https://realpython.com/add-python-to-path/)
+
+6. **npm/node not recognized in terminal**
+
+   - Error: "npm is not recognized" or "command not found: npm"
+   - **Solution**: See [Node.js PATH setup](https://stackoverflow.com/questions/27864040/fixing-npm-path-in-windows-8-and-10) (Windows) or [macOS/Linux PATH guide](https://stackoverflow.com/questions/11177954/how-do-i-completely-uninstall-node-js-and-reinstall-from-beginning-mac-os-x)
+   - After installing Node.js, restart your terminal/PowerShell completely
+
+7. **Python package installation errors**
+
+   - Error: "pip is not recognized" or permission denied
+   - **Solution**: See [pip installation guide](https://pip.pypa.io/en/stable/installation/) and [permission issues](https://stackoverflow.com/questions/31512422/pip-install-access-denied-on-windows)
+   - Try using `python -m pip install` instead of `pip install`
+
+8. **PowerShell execution policy errors** (Windows)
+   - Error: "cannot be loaded because running scripts is disabled"
+   - **Solution**: See [PowerShell execution policy guide](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policies)
+   - Or use Command Prompt (cmd) instead of PowerShell
+
+### Getting More Help
+
+- **Python issues**: Check [Python.org documentation](https://docs.python.org/3/using/index.html)
+- **Node.js issues**: Check [Node.js troubleshooting guide](https://nodejs.org/en/docs/guides/debugging-getting-started/)
+- **Still stuck?**: Include the full error message and your OS version when asking for help
