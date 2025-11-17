@@ -58,6 +58,7 @@
           <thead>
             <tr>
               <th class="project-header">Project</th>
+              <th class="year-header">Pre 2018</th>
               <th v-for="year in availableYears" :key="year" class="year-header">
                 {{ year }}
               </th>
@@ -70,6 +71,12 @@
                 <div class="project-info">
                   <span class="project-name">{{ project.study }}</span>
                   <span class="project-samples">{{ project.total.toLocaleString() }} samples</span>
+                </div>
+              </td>
+              <td class="data-cell">
+                <div class="sample-count" :class="getCellClass(project.pre2018Total || 0)">
+                  <span class="count-number">{{ (project.pre2018Total || 0).toLocaleString() }}</span>
+                  <div class="count-bar" :style="{ width: getBarWidth(project.pre2018Total || 0) + '%' }"></div>
                 </div>
               </td>
               <td v-for="year in availableYears" :key="year" class="data-cell">
@@ -89,6 +96,9 @@
             <tr class="totals-row">
               <td class="totals-label">
                 <strong>Year Totals</strong>
+              </td>
+              <td class="year-total">
+                <strong>{{ getPre2018Total().toLocaleString() }}</strong>
               </td>
               <td v-for="year in availableYears" :key="year" class="year-total">
                 <strong>{{ getYearTotal(year).toLocaleString() }}</strong>
@@ -198,30 +208,47 @@ const loadMatrixData = async () => {
       const year = typeof row.year === 'bigint' ? Number(row.year) : row.year
       return Number(year)
     }))].sort()
-    availableYears.value = years
-    
+
+    // Filter to only include years 2018 and later
+    availableYears.value = years.filter(year => year >= 2018)
+
     // Group data by project
     const projectMap = new Map()
     let total = 0
     let maxCount = 0
-    
+
     result.forEach(row => {
       const project = row.project
       const year = typeof row.year === 'bigint' ? Number(row.year) : Number(row.year)
       const count = typeof row.sample_count === 'bigint' ? Number(row.sample_count) : row.sample_count
-      
+
       if (!projectMap.has(project)) {
         projectMap.set(project, {
           study: project,
           yearData: {},
+          pre2018Total: 0,
           total: 0
         })
       }
-      
-      projectMap.get(project).yearData[year] = count
+
+      // If year is before 2018, add to pre2018Total
+      if (year < 2018) {
+        projectMap.get(project).pre2018Total += count
+      } else {
+        // Otherwise, add to yearData
+        projectMap.get(project).yearData[year] = count
+        maxCount = Math.max(maxCount, count)
+      }
+
       projectMap.get(project).total += count
       total += count
-      maxCount = Math.max(maxCount, count)
+    })
+
+    // Calculate maxCount including pre2018Total aggregates
+    projectMap.forEach(project => {
+      if (project.pre2018Total > 0) {
+        maxCount = Math.max(maxCount, project.pre2018Total)
+      }
     })
     
     // Convert to array and sort by total descending
@@ -243,6 +270,12 @@ const loadMatrixData = async () => {
   } finally {
     isLoading.value = false
   }
+}
+
+const getPre2018Total = () => {
+  return projectsData.value.reduce((sum, project) => {
+    return sum + (project.pre2018Total || 0)
+  }, 0)
 }
 
 const getYearTotal = (year) => {
