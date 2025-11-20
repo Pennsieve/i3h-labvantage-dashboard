@@ -197,7 +197,7 @@ def convert_csv_to_parquet(config_path, data_dir, parquet_file):
         traceback.print_exc()
         sys.exit(1)
 if __name__ == "__main__":
-    config_path = "data/config/model.json"
+    config_path = "src/config/model.json"
     data_dir = "data"
     parquet_file = "public/lv_export.parquet"
     
