@@ -15,9 +15,15 @@ def load_config(config_path):
         print(f"Error loading config: {e}", file=sys.stderr)
         sys.exit(1)
 def apply_column_mapping(df, config):
-    """Rename columns based on mapping in config"""
-    column_mapping = config.get('column_mapping', {})
-    
+    """Rename columns based on 'name' property in column config"""
+    columns_config = config.get('columns', {})
+
+    # Build mapping from old names to new names based on 'name' property
+    column_mapping = {}
+    for col_key, col_settings in columns_config.items():
+        if isinstance(col_settings, dict) and 'name' in col_settings:
+            column_mapping[col_key] = col_settings['name']
+
     if column_mapping:
         print(f"\nApplying column name mappings:")
         for old_name, new_name in column_mapping.items():
@@ -26,7 +32,7 @@ def apply_column_mapping(df, config):
                 df = df.rename(columns={old_name: new_name})
             else:
                 print(f"  Warning: Column '{old_name}' not found in data")
-    
+
     return df
 def join_csvs(csv_files, data_dir, join_config):
     """Join multiple CSV files on the first common column"""
@@ -64,53 +70,63 @@ def apply_column_types(df, config):
     """Apply type conversions based on config"""
     columns_config = config.get('columns', {})
     list_columns = []  # Track which columns should be lists
-    
-    for col, settings in columns_config.items():
-        if col not in df.columns:
+
+    for col_key, settings in columns_config.items():
+        # Use the renamed column name if 'name' property exists, otherwise use the config key
+        actual_col_name = settings.get('name', col_key) if isinstance(settings, dict) else col_key
+
+        if actual_col_name not in df.columns:
             continue
-            
+
         col_type = settings.get('type')
-        print(f"Converting {col} to {col_type}")
-        
+        print(f"Converting {actual_col_name} to {col_type}")
+
         try:
             if col_type == 'datetime':
-                df[col] = pd.to_datetime(df[col], errors='coerce')
-                
+                df[actual_col_name] = pd.to_datetime(df[actual_col_name], errors='coerce')
+
             elif col_type == 'array_of_strings':
                 delimiter = settings.get('delimiter', ',')
                 # Split strings into lists
-                df[col] = df[col].astype(str).apply(
+                df[actual_col_name] = df[actual_col_name].astype(str).apply(
                     lambda x: x.split(delimiter) if x != 'nan' else []
                 )
-                df[col] = df[col].apply(
+                df[actual_col_name] = df[actual_col_name].apply(
                     lambda x: [s.strip() for s in x] if x else []
                 )
-                list_columns.append(col)  # Mark as list column
-                
-            elif col_type == 'category':
-                df[col] = df[col].astype('category')
-                
-            elif col_type in ['int32', 'int64']:
-                df[col] = pd.to_numeric(df[col], errors='coerce').astype(col_type)
-                
-            elif col_type in ['float32', 'float64']:
-                df[col] = pd.to_numeric(df[col], errors='coerce').astype(col_type)
-                
-            elif col_type == 'string':
-                df[col] = df[col].astype('string')
-                
-        except Exception as e:
-            print(f"Warning: Could not convert {col} to {col_type}: {e}")
+                list_columns.append(actual_col_name)  # Mark as list column
 
-    
+            elif col_type == 'category':
+                df[actual_col_name] = df[actual_col_name].astype('category')
+
+            elif col_type in ['int32', 'int64']:
+                df[actual_col_name] = pd.to_numeric(df[actual_col_name], errors='coerce').astype(col_type)
+
+            elif col_type in ['float32', 'float64']:
+                df[actual_col_name] = pd.to_numeric(df[actual_col_name], errors='coerce').astype(col_type)
+
+            elif col_type == 'string':
+                df[actual_col_name] = df[actual_col_name].astype('string')
+
+        except Exception as e:
+            print(f"Warning: Could not convert {actual_col_name} to {col_type}: {e}")
+
+
     # Apply default type to remaining object columns
+    # Build set of all actual column names from config (after renaming)
+    configured_columns = set()
+    for col_key, settings in columns_config.items():
+        actual_col_name = settings.get('name', col_key) if isinstance(settings, dict) else col_key
+        configured_columns.add(actual_col_name)
+
     default_type = config.get('default_type', 'string')
     for col in df.columns:
-        if df[col].dtype == 'object' and col not in columns_config:
+        if df[col].dtype == 'object' and col not in configured_columns:
             print(f"Converting {col} to default type: {default_type}")
             df[col] = df[col].astype(default_type)
-    
+
     return df, list_columns  # Return both df and list columns
+
 
 
 def convert_csv_to_parquet(config_path, data_dir, parquet_file):
@@ -142,7 +158,8 @@ def convert_csv_to_parquet(config_path, data_dir, parquet_file):
         # Apply type conversions from config
         print("\nApplying column type conversions...")
         df, list_columns = apply_column_types(df, config)
-        
+
+
         # Write to Parquet with explicit schema for list columns
         print(f"\nWriting to Parquet file: {parquet_file}")
         

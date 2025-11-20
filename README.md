@@ -104,7 +104,10 @@ Then install the required packages:
 
 2. **Place your CSV file(s)** in the `data/` directory.
 
-3. **Update the config** (if needed):
+3. **Make Public/ Folder in root**
+   in the root add a public folder. this is where the .parquet file will live
+
+4. **Update the config** (if needed):
 
    Edit `data/config/model.json` to configure your data processing:
 
