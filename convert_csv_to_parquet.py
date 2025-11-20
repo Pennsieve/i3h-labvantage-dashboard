@@ -101,9 +101,7 @@ def apply_column_types(df, config):
                 
         except Exception as e:
             print(f"Warning: Could not convert {col} to {col_type}: {e}")
-    
-    print(f"\nSample IRB values:")
-    print(df['IRB'].head(10))
+
     
     # Apply default type to remaining object columns
     default_type = config.get('default_type', 'string')
