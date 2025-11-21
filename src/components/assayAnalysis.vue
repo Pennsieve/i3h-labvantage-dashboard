@@ -1,7 +1,6 @@
 <template>
   <div class="assay-analysis">
     <h2>Assay Analysis</h2>
-
     <div class="chart-container">
       <h3>Assay Counts</h3>
       <Bar v-if="chartData" :data="chartData" :options="chartOptions" />
