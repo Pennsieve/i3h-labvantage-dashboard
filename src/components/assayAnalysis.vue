@@ -38,8 +38,7 @@ const props = defineProps({
 });
 
 const sampleAssayMap = {
-  CyTOF: ["CYTOFM", "NEUEXPV2", "TETRAMERA3"],
-  "PBMC (Heparin)": ["NEUEXPV2", "AIM"],
+  CyTOF: ["CYTOFM", "CYTOFTIER1"],
 };
 const assayCounts = ref([]);
 
@@ -109,7 +108,7 @@ const loadAssayData = async () => {
     // Parse model.json to find all columns with category = "assay"
     const assayColumns = Object.entries(modelConfig.columns)
       .filter(([_, config]) => config.category === "assay")
-      .map(([columnName, _]) => columnName);
+      .map(([columnName, config]) => config.name || columnName);
 
     // Query count for each assay (Pre Process, Post Process, and Analysed)
     const countPromises = assayColumns.map(async (columnName) => {
@@ -119,20 +118,24 @@ const loadAssayData = async () => {
       const validSampleTypes = Object.entries(sampleAssayMap)
         .filter(([_, assays]) => assays.includes(columnName))
         .map(([sampleType, _]) => sampleType);
-
+      console.log(validSampleTypes);
       // Skip this assay if it's not in any sample type's valid list
       if (validSampleTypes.length === 0) {
         return null;
       }
 
       // Build the SAMPLETYPE filter
-      const sampleTypeFilter = validSampleTypes.map(st => `'${st}'`).join(', ');
+      const sampleTypeFilter = validSampleTypes
+        .map((st) => `'${st}'`)
+        .join(", ");
 
       const preProcessResult = await props.executeQuery(`
-        SELECT COUNT(*) as count
-        FROM samples
-        WHERE ${columnName} = 'N' AND SAMPLETYPE IN (${sampleTypeFilter})
-      `);
+      SELECT COUNT(*) as count
+      FROM samples
+      WHERE ${columnName} = 'Y' 
+        AND SAMPLETYPE IN (${sampleTypeFilter})
+        AND DISPOSALSTATUS != 'Not Collected'
+    `);
 
       const postProcessResult = await props.executeQuery(`
         SELECT COUNT(*) as count
@@ -157,7 +160,7 @@ const loadAssayData = async () => {
     const results = await Promise.all(countPromises);
 
     // Filter out null results (assays not in sampleAssayMap)
-    assayCounts.value = results.filter(result => result !== null);
+    assayCounts.value = results.filter((result) => result !== null);
   } catch (err) {
     console.error("Failed to load assay data:", err);
   }
