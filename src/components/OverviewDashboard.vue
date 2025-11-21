@@ -1,7 +1,6 @@
 <template>
   <div class="overview-dashboard">
     <h2>Dashboard Overview</h2>
-    <assayAnalysis :executeQuery="executeQuery"></assayAnalysis>
     <div class="stats-grid">
       <div class="stat-card">
         <h3>Total Samples</h3>
@@ -142,7 +141,6 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
-import assayAnalysis from "./assayAnalysis.vue";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 

@@ -21,6 +21,9 @@
         <button @click="activeView = 'matrix'" :class="{ active: activeView === 'matrix' }">
           Sample Matrix
         </button>
+        <button @click="activeView = 'assays'" :class="{ active: activeView === 'assays' }">
+          Assays
+        </button>
       </div>
 
       <OverviewDashboard v-if="activeView === 'overview'" :executeQuery="executeQuery" />
@@ -28,6 +31,7 @@
       <SampleBrowser v-if="activeView === 'samples'" :executeQuery="executeQuery" />
       <QueryBuilder v-if="activeView === 'query'" :executeQuery="executeQuery" />
       <CytofMatrix v-if="activeView === 'matrix'" :executeQuery="executeQuery" />
+      <AssaysView v-if="activeView === 'assays'" :executeQuery="executeQuery" />
     </main>
     
     <div v-else-if="isLoading" class="loading">
@@ -48,6 +52,7 @@ import TimelineChart from './components/TimelineChart.vue'
 import SampleBrowser from './components/SampleBrowser.vue'
 import QueryBuilder from './components/QueryBuilder.vue'
 import CytofMatrix from './components/CytofMatrix.vue'
+import AssaysView from './components/AssaysView.vue'
 
 const { isLoading, error, executeQuery } = useDuckDB()
 const activeView = ref('overview')
