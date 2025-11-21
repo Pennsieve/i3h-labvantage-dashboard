@@ -140,8 +140,6 @@ def convert_csv_to_parquet(config_path, data_dir, parquet_file):
         if not csv_files:
             raise ValueError("No file_names specified in config")
         
-        print(f"CSV files to process: {csv_files}")
-        
         # Get join configuration
         join_config = config.get('join', {'type': 'left', 'column': None})
         
@@ -166,7 +164,7 @@ def convert_csv_to_parquet(config_path, data_dir, parquet_file):
         # First convert to PyArrow table to let it infer types
         table = pa.Table.from_pandas(df)
         
-        # Now rebuild schema with explicit list types for array columns
+        # Now rebuild schema with explicit list types for array columns ???
         new_fields = []
         for field in table.schema:
             if field.name in list_columns:

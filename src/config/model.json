@@ -50,7 +50,7 @@
     "TETA2ANALYSISDATE": { "name": "TETRAMERA2ANALYSISDATE" }
   },
   "default_type": "string",
-  "file_names": ["LV_Inventory_1.csv", "LV_Classification_1.csv"],
+  "file_names": ["LV_Inventory_2.csv", "LV_Classification_1.csv"],
   "join": {
     "type": "left",
     "column": "STUDY"

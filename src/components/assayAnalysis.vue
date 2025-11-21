@@ -1,7 +1,6 @@
 <template>
   <div class="assay-analysis">
     <h2>Assay Analysis</h2>
-
     <div class="chart-container">
       <h3>Assay Counts</h3>
       <Bar v-if="chartData" :data="chartData" :options="chartOptions" />
@@ -38,8 +37,7 @@ const props = defineProps({
 });
 
 const sampleAssayMap = {
-  CyTOF: ["CYTOFM", "NEUEXPV2", "TETRAMERA3"],
-  "PBMC (Heparin)": ["NEUEXPV2", "AIM"],
+  CyTOF: ["CYTOFM", "CYTOFTIER1"],
 };
 const assayCounts = ref([]);
 
@@ -106,48 +104,43 @@ const chartOptions = {
 
 const loadAssayData = async () => {
   try {
-    // Parse model.json to find all columns with category = "assay"
-    const assayColumns = Object.entries(modelConfig.columns)
-      .filter(([_, config]) => config.category === "assay")
-      .map(([columnName, _]) => columnName);
+    // Get unique sample types from the map
+    const sampleTypes = Object.keys(sampleAssayMap);
 
-    // Query count for each assay (Pre Process, Post Process, and Analysed)
-    const countPromises = assayColumns.map(async (columnName) => {
-      const analysisDateColumn = `${columnName}AnalysisDate`;
+    const countPromises = sampleTypes.map(async (sampleType) => {
+      const assayColumns = sampleAssayMap[sampleType];
 
-      // Find which sample types include this assay
-      const validSampleTypes = Object.entries(sampleAssayMap)
-        .filter(([_, assays]) => assays.includes(columnName))
-        .map(([sampleType, _]) => sampleType);
-
-      // Skip this assay if it's not in any sample type's valid list
-      if (validSampleTypes.length === 0) {
-        return null;
-      }
-
-      // Build the SAMPLETYPE filter
-      const sampleTypeFilter = validSampleTypes.map(st => `'${st}'`).join(', ');
+      // Build OR conditions for all assay columns
+      const assayConditions = assayColumns
+        .map((col) => `${col} = 'Y'`)
+        .join(" OR ");
 
       const preProcessResult = await props.executeQuery(`
-        SELECT COUNT(*) as count
-        FROM samples
-        WHERE ${columnName} = 'N' AND SAMPLETYPE IN (${sampleTypeFilter})
+      SELECT COUNT(*) as count
+      FROM samples
+      WHERE CYTOFM = 'Y' 
+        AND SAMPLETYPE = 'CyTOF'
+        AND LOCATION NOT NULL
       `);
 
       const postProcessResult = await props.executeQuery(`
         SELECT COUNT(*) as count
         FROM samples
-        WHERE ${columnName} = 'Y' AND SAMPLETYPE IN (${sampleTypeFilter})
+        WHERE (${assayConditions})
+          AND SAMPLETYPE = '${sampleType}'
+          AND CYTOFPREPDATE IS NOT NULL
       `);
 
       const analysedResult = await props.executeQuery(`
         SELECT COUNT(*) as count
         FROM samples
-        WHERE ${columnName} = 'Y' AND ${analysisDateColumn} IS NOT NULL AND SAMPLETYPE IN (${sampleTypeFilter})
+        WHERE (${assayConditions})
+          AND SAMPLETYPE = '${sampleType}'
+          AND CYTOFTIER1ANALYSISDATE IS NOT NULL
       `);
 
       return {
-        name: columnName,
+        name: sampleType,
         preProcess: Number(preProcessResult[0]?.count || 0),
         postProcess: Number(postProcessResult[0]?.count || 0),
         analysed: Number(analysedResult[0]?.count || 0),
@@ -155,9 +148,7 @@ const loadAssayData = async () => {
     });
 
     const results = await Promise.all(countPromises);
-
-    // Filter out null results (assays not in sampleAssayMap)
-    assayCounts.value = results.filter(result => result !== null);
+    assayCounts.value = results;
   } catch (err) {
     console.error("Failed to load assay data:", err);
   }
