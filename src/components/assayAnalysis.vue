@@ -76,13 +76,27 @@ const chartOptions = {
   indexAxis: "y", // This makes it a horizontal bar chart
   responsive: true,
   maintainAspectRatio: false,
+  barThickness: 60, // Makes bars thinner
   plugins: {
     legend: {
       display: true,
       position: "top",
+      labels: {
+        font: {
+          size: 24,
+        },
+      },
     },
     title: {
       display: false,
+    },
+    tooltip: {
+      bodyFont: {
+        size: 14,
+      },
+      titleFont: {
+        size: 16,
+      },
     },
   },
   scales: {
@@ -91,12 +105,28 @@ const chartOptions = {
       title: {
         display: true,
         text: "Count",
+        font: {
+          size: 16,
+        },
+      },
+      ticks: {
+        font: {
+          size: 14,
+        },
       },
     },
     y: {
       title: {
         display: true,
         text: "Assay Name",
+        font: {
+          size: 16,
+        },
+      },
+      ticks: {
+        font: {
+          size: 14,
+        },
       },
     },
   },
