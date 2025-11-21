@@ -431,12 +431,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.overview-dashboard {
-  padding: 30px;
-  background: #f8fafc;
-  min-height: 100vh;
-}
-
 .overview-dashboard h2 {
   color: #1e293b;
   font-size: 2em;
@@ -454,7 +448,7 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 20px;
-  margin-bottom: 40px;
+  margin-bottom: 20px;
 }
 
 .stat-card {
@@ -503,76 +497,24 @@ onMounted(async () => {
   background-clip: text;
 }
 
-.charts-section {
-  margin-bottom: 40px;
-}
-
-.chart-container {
-  background: white;
-  border-radius: 12px;
-  padding: 25px;
-  margin-bottom: 25px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e2e8f0;
-  transition: box-shadow 0.3s ease;
-}
-
-.chart-container:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-}
-
-.chart-container h3 {
-  color: #1e293b;
-  font-size: 1.2em;
-  font-weight: 600;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #e2e8f0;
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.95em;
-}
-
-.data-table thead {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.data-table th {
-  padding: 12px 15px;
-  text-align: left;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.85em;
-  letter-spacing: 0.5px;
-}
-
-.data-table tbody tr {
-  border-bottom: 1px solid #e2e8f0;
-  transition: background-color 0.2s ease;
-}
-
-.data-table tbody tr:hover {
-  background-color: #f8fafc;
-}
-
-.data-table td {
-  padding: 12px 15px;
-  color: #475569;
-}
 
 .classification-section {
-  margin-top: 50px;
+  margin-top: 40px;
   padding-top: 40px;
-  border-top: 3px solid #e2e8f0;
+  border-top: 2px solid #e2e8f0;
 }
 
 .classification-section h2 {
+  color: #1e293b;
+  font-size: 2em;
+  font-weight: 600;
   margin-bottom: 30px;
-  color: #2c3e50;
+  padding-bottom: 15px;
+  border-bottom: 3px solid #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .charts-grid {
@@ -601,9 +543,16 @@ onMounted(async () => {
 
 .chart-card h3,
 .chart-card-wide h3 {
-  margin-bottom: 8px;
-  color: #34495e;
-  font-size: 1.1em;
+  color: #1e293b;
+  font-size: 1.3em;
+  font-weight: 600;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e2e8f0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .chart-description {
@@ -630,31 +579,6 @@ onMounted(async () => {
 }
 
 @media (max-width: 768px) {
-  .overview-dashboard {
-    padding: 20px;
-  }
-
-  .overview-dashboard h2 {
-    font-size: 1.5em;
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-
-  .stat-card {
-    padding: 20px;
-  }
-
-  .stat-value {
-    font-size: 2em;
-  }
-
-  .chart-container {
-    padding: 20px;
-  }
-
   .charts-grid {
     grid-template-columns: 1fr;
   }
@@ -665,15 +589,6 @@ onMounted(async () => {
 
   .bar-chart-container-wide {
     height: 400px;
-  }
-
-  .data-table {
-    font-size: 0.85em;
-  }
-
-  .data-table th,
-  .data-table td {
-    padding: 10px 12px;
   }
 }
 </style>
