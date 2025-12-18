@@ -1,6 +1,6 @@
 <template>
   <div class="overview-dashboard">
-    <h2>Dashboard Overview</h2>
+    
     <div class="stats-grid">
       <div class="stat-card">
         <h3>Total Samples</h3>
